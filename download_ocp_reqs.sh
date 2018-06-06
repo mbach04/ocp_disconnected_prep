@@ -131,6 +131,12 @@ declare -a images=(
         "redhat-sso-7/sso71-openshift"
         "redhat-sso-7/sso72-openshift"
         "openshift3/registry-console:v3.9.27"
+        "openshift3/jenkins-1-rhel7:v3.9.27"
+        "openshift3/jenkins-2-rhel7:v3.9.27"
+        "openshift3/jenkins-slave-base-rhel7:v3.9.27"
+        "openshift3/jenkins-slave-maven-rhel7:v3.9.27"
+        "openshift3/jenkins-slave-nodejs-rhel7:v3.9.27"
+        "rhscl/postgresql-96-rhel7:latest"
 )
 
 
@@ -141,14 +147,25 @@ do
    docker pull registry.access.redhat.com/$i
 done
 
+# Grab nexus image
+docker pull registry.connect.redhat.com/sonatype/nexus-repository-manager
+
+# download coreos images
+docker pull quay.io/quay/redis:latest
+docker pull quay.io/coreos/quay:v2.9.1
+
+
 
 # Save the images
 echo "Saving docker images now..."
 
-IDS=$(docker images | awk '{if ($1 ~ /^(registry|redhat)/) print $3}')
+IDS=$(docker images | awk '{if ($1 ~ /^(registry|quay)/) print $3}')
 docker save $IDS -o /tmp/repos/images/ocp_docker_images.tar
 
 docker images | sed '1d' | awk '{print $1 " " $2 " " $3}' > /tmp/repos/images/ocp_docker_images.list
+
+echo "Downloading infra-ansible roles...""
+git clone https://github.com/redhat-cop/infra-ansible.git /tmp/repos/quay-role
 
 
 echo "Finished/n"
