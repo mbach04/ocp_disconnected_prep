@@ -164,7 +164,7 @@ docker save $IDS -o /tmp/repos/images/ocp_docker_images.tar
 
 docker images | sed '1d' | awk '{print $1 " " $2 " " $3}' > /tmp/repos/images/ocp_docker_images.list
 
-echo "Downloading infra-ansible roles...""
+echo "Downloading infra-ansible roles..."
 git clone https://github.com/redhat-cop/infra-ansible.git /tmp/repos/quay-role
 
 
