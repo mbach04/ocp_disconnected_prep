@@ -180,5 +180,5 @@ git clone https://github.com/redhat-cop/infra-ansible.git $REPO_STORAGE_PATH/qua
 
 
 echo "Finished/n"
-echo "Your files are located in /tmp/repos. Please export the entirety of $STORAGE_PATH onto an external disk."
+echo "Your files are located in $STORAGE_PATH. Please export the entirety of $STORAGE_PATH onto an external disk."
 
