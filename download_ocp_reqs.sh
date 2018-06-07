@@ -4,17 +4,25 @@
 ### Note! Run as root user
 rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
 
-echo Enter RHN User: 
-read -s RHN_USER
-echo Enter RHN Password:
+echo "Enter RHN User:/n"
+read RHN_USER
+echo "Enter RHN Password:/n"
 read -s RHN_PASSWORD
+echo "Enter full path to storage location for export files (requires ~130 GB of available space):/n"
+read STORAGE_PATH
+
+IMAGE_STORAGE_PATH=$STORAGE_PATH/images
+REPO_STORAGE_PATH=$STORAGE_PATH/repo_files
+
+# STORAGE_SIZE=$(df --output=size /mnt/xyz | awk ' NR==2 ')
+# MIN_SIZE=136314880
+
+
 
 subscription-manager register --username=$RHN_USER --password=$RHN_PASSWORD
 subscription-manager refresh
 
 POOLID=$(/usr/bin/subscription-manager list --all --available --matches="*OpenShift Container*" | awk '/Pool ID/ {print $3}' | head -1)
-
-
 
 subscription-manager attach --pool=$POOLID
 
@@ -30,7 +38,9 @@ yum -y install yum-utils createrepo docker git
 systemctl enable docker
 systemctl start docker
 
-mkdir -p /tmp/repos/images
+mkdir -p $IMAGE_STORAGE_PATH
+mkdir -p $REPO_STORAGE_PATH
+
 
 for repo in \
     rhel-7-server-rpms \
@@ -39,8 +49,8 @@ for repo in \
     rhel-7-server-ansible-2.4-rpms \
     rhel-7-server-ose-3.9-rpms
 do
-  reposync --gpgcheck -lm --repoid=${repo} --download_path=/tmp/repos
-  createrepo -v /tmp/repos/${repo} -o /tmp/repos/${repo}
+  reposync --gpgcheck -lm --repoid=${repo} --download_path=$REPO_STORAGE_PATH
+  createrepo -v $REPO_STORAGE_PATH/${repo} -o $REPO_STORAGE_PATH/${repo}
 done
 
 clear
@@ -137,6 +147,7 @@ declare -a images=(
         "openshift3/jenkins-slave-maven-rhel7:v3.9.27"
         "openshift3/jenkins-slave-nodejs-rhel7:v3.9.27"
         "rhscl/postgresql-96-rhel7:latest"
+        "openshift3/oauth-proxy:latest"
 )
 
 
@@ -160,14 +171,14 @@ docker pull quay.io/coreos/quay:v2.9.1
 echo "Saving docker images now..."
 
 IDS=$(docker images | awk '{if ($1 ~ /^(registry|quay)/) print $3}')
-docker save $IDS -o /tmp/repos/images/ocp_docker_images.tar
+docker save $IDS -o $IMAGE_STORAGE_PATH/ocp_docker_images.tar
 
-docker images | sed '1d' | awk '{print $1 " " $2 " " $3}' > /tmp/repos/images/ocp_docker_images.list
+docker images | sed '1d' | awk '{print $1 " " $2 " " $3}' > $IMAGE_STORAGE_PATH/ocp_docker_images.list
 
 echo "Downloading infra-ansible roles..."
-git clone https://github.com/redhat-cop/infra-ansible.git /tmp/repos/quay-role
+git clone https://github.com/redhat-cop/infra-ansible.git $REPO_STORAGE_PATH/quay-role
 
 
 echo "Finished/n"
-echo "Your files are located in /tmp/repos. Please export the entirety of /tmp/repos onto an external disk."
+echo "Your files are located in /tmp/repos. Please export the entirety of $STORAGE_PATH onto an external disk."
 
