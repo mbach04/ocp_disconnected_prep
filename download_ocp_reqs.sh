@@ -156,6 +156,7 @@ declare -a images=(
         "openshift3/jenkins-slave-nodejs-rhel7:v3.9"
         "rhscl/postgresql-96-rhel7:latest"
         "openshift3/oauth-proxy:latest"
+        "openshift3/ose-keepalived-ipfailover:v3.9.14"
 )
 
 
